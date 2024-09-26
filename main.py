@@ -84,21 +84,24 @@ def main():
                      'sbytes', 'dbytes', 'sttl', 'dttl', 'sload', 'dload', 
                      'sloss', 'dloss', 'service', 'sjit', 'djit', 'synack', 'ackdat']
 
-    # # Prediction button
-    # if st.button('Predict'):
-    #     st.write("Processing the following input data:")
-    #     st.write(input_data)
+    # When the user clicks the Predict button
+    if st.button('Predict'):
+        st.write("Processing the following input data:")
+        st.write(input_data)
 
-        # # Prepare and scale the input data
-        # input_df = prepare_input_data(input_data, model_columns)
-        # input_scaled = scaler.transform(input_df)
+        # Prepare the input data as a DataFrame
+        input_df = prepare_input_data(input_data, model_columns)
         
-        # Make a prediction
-    prediction = model.predict(input_data)
-    prediction_label = 'Attack' if prediction == 1 else 'Normal'
+        # Scale the input data
+        input_scaled = scaler.transform(input_df)
+        
+        # Make a prediction using the model
+        prediction = model.predict(input_scaled)
+        prediction_label = 'Attack' if prediction[0] == 1 else 'Normal'
         
         # Display the result
-    st.subheader(f'Prediction: {prediction_label}')
+        st.subheader(f'Prediction: {prediction_label}')
+
 
 if __name__ == "__main__":
     main()
