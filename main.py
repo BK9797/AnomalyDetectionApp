@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
@@ -37,7 +36,7 @@ def preprocess_data(df):
     df['tcp_time_diff'] = df['synack'] - df['ackdat']
 
     # Return both features and target
-    return df.drop(['label', 'attack_cat'], axis=1), df['label']
+    return df.drop(['label', 'attack_cat'], axis=1), df['label'], label_encoder
 
 def train_model(X, y):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -50,12 +49,15 @@ def train_model(X, y):
     
     return model, scaler
 
-def prepare_input_data(input_data, model_columns):
+def prepare_input_data(input_data, model_columns, label_encoder):
     # Convert the input_data dictionary into a DataFrame
     input_df = pd.DataFrame([input_data])
 
-    # One-hot encode 'proto' and 'service' similar to how it was done in preprocessing
+    # One-hot encode 'proto' and 'service'
     input_df = pd.get_dummies(input_df, columns=['proto', 'service'], drop_first=True)
+
+    # Label encode 'state'
+    input_df['state'] = label_encoder.transform(input_df['state'])
 
     # Add missing columns with default values if they do not exist
     for col in model_columns:
@@ -76,7 +78,7 @@ def main():
     
     # Load and preprocess data
     data = load_data()
-    X, y = preprocess_data(data)
+    X, y, label_encoder = preprocess_data(data)
     model, scaler = train_model(X, y)
 
     # Define input fields based on the dataset
@@ -105,7 +107,7 @@ def main():
     # Button for prediction
     if st.button('Predict'):
         model_columns = X.columns.tolist()  # Get the feature names used in training
-        prediction_input = prepare_input_data(input_data, model_columns)
+        prediction_input = prepare_input_data(input_data, model_columns, label_encoder)
         
         # Scale the input data
         prediction_input_scaled = scaler.transform(prediction_input)
