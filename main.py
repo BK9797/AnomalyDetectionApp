@@ -45,7 +45,7 @@ def train_model(X, y):
     model.fit(X_train_scaled, y_train)
     return model, scaler
 
-    def main():
+def main():
     st.title('Network Traffic Anomaly Detection')
     data = load_data()
     X, y = preprocess_data(data)
