@@ -56,9 +56,8 @@ def prepare_input_data(input_data, model_columns, label_encoder):
     # One-hot encode 'proto' and 'service'
     input_df = pd.get_dummies(input_df, columns=['proto', 'service'], drop_first=True)
 
-    input_df['state'] = label_encoder.fit_transform(input_df['state'])
-    input_df['attack_cat'] = label_encoder.fit_transform(input_df['attack_cat'])
-
+    # Encode 'state' with existing label encoder
+    input_df['state'] = label_encoder.transform(input_df['state'])
 
     # Add missing columns with default values if they do not exist
     for col in model_columns:
@@ -73,7 +72,6 @@ def prepare_input_data(input_data, model_columns, label_encoder):
     st.write("Model expected columns:", model_columns)
 
     return input_df
-
 
 def main():
     st.title('Network Traffic Anomaly Detection')
