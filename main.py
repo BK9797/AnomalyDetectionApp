@@ -17,12 +17,15 @@ def preprocess_data(df):
     df['service'] = df['service'].replace('-', 'other')
     features_to_drop = ['ct_state_ttl', 'ct_dst_sport_ltm', 'ct_src_ltm']
     df = df.drop(features_to_drop, axis=1)
+
+    # One-hot encode proto and service
     df = pd.get_dummies(df, columns=['proto', 'service'], drop_first=True)
     
     label_encoder = LabelEncoder()
     df['state'] = label_encoder.fit_transform(df['state'])
     df['attack_cat'] = label_encoder.fit_transform(df['attack_cat'])
     
+    # Create additional features
     df['load_interaction'] = df['sload'] * df['dload']
     df['total_bytes'] = df['sbytes'] + df['dbytes']
     df['pkt_flow_ratio'] = df['spkts'] / (df['dpkts'] + 1)
@@ -49,6 +52,9 @@ def train_model(X, y):
 def prepare_input_data(input_data, model_columns):
     # Convert the input_data dictionary into a DataFrame
     input_df = pd.DataFrame([input_data])
+
+    # One-hot encode 'proto' and 'service' similar to how it was done in preprocessing
+    input_df = pd.get_dummies(input_df, columns=['proto', 'service'], drop_first=True)
 
     # Add missing columns with default values if they do not exist
     for col in model_columns:
@@ -96,9 +102,13 @@ def main():
     input_data['ackdat'] = st.number_input('ACK-DATA', min_value=0.0)
 
     # Define the columns that your model expects
-    model_columns = ['dur', 'proto', 'service', 'state', 'spkts', 'dpkts',
-                     'sbytes', 'dbytes', 'sttl', 'dttl', 'sload', 'dload', 'sloss',
-                     'dloss', 'sjit', 'djit', 'synack', 'ackdat']
+    model_columns = [
+        'dur', 'proto_TCP', 'proto_UDP', 'proto_ICMP', 'proto_other', 
+        'service_http', 'service_dns', 'service_smtp', 'service_ftp', 
+        'state', 'spkts', 'dpkts', 'sbytes', 'dbytes', 
+        'sttl', 'dttl', 'sload', 'dload', 'sloss', 'dloss', 
+        'sjit', 'djit', 'synack', 'ackdat'
+    ]
 
     # When the user clicks the Predict button
     if st.button('Predict'):
