@@ -20,11 +20,11 @@ def preprocess_data(df):
 
     # One-hot encode proto and service
     df = pd.get_dummies(df, columns=['proto', 'service'], drop_first=True)
-    
+
     label_encoder = LabelEncoder()
     df['state'] = label_encoder.fit_transform(df['state'])
     df['attack_cat'] = label_encoder.fit_transform(df['attack_cat'])
-    
+
     # Create additional features
     df['load_interaction'] = df['sload'] * df['dload']
     df['total_bytes'] = df['sbytes'] + df['dbytes']
@@ -35,8 +35,9 @@ def preprocess_data(df):
     df['jitter_diff'] = df['sjit'] - df['djit']
     df['jitter_ratio'] = df['sjit'] / (df['djit'] + 1)
     df['tcp_time_diff'] = df['synack'] - df['ackdat']
-    
-    return df.drop('label', axis=1), df['label']
+
+    # Return both features and target
+    return df.drop(['label', 'attack_cat'], axis=1), df['label']
 
 def train_model(X, y):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -107,7 +108,9 @@ def main():
         'service_http', 'service_dns', 'service_smtp', 'service_ftp', 
         'state', 'spkts', 'dpkts', 'sbytes', 'dbytes', 
         'sttl', 'dttl', 'sload', 'dload', 'sloss', 'dloss', 
-        'sjit', 'djit', 'synack', 'ackdat'
+        'sjit', 'djit', 'synack', 'ackdat', 'load_interaction', 
+        'total_bytes', 'pkt_flow_ratio', 'bytes_diff', 'bytes_ratio', 
+        'ttl_diff', 'jitter_diff', 'jitter_ratio', 'tcp_time_diff'
     ]
 
     # When the user clicks the Predict button
