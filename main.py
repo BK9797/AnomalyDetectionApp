@@ -56,8 +56,8 @@ def prepare_input_data(input_data, model_columns, label_encoder):
     # One-hot encode 'proto' and 'service'
     input_df = pd.get_dummies(input_df, columns=['proto', 'service'], drop_first=True)
 
-    df['state'] = label_encoder.fit_transform(df['state'])
-    df['attack_cat'] = label_encoder.fit_transform(df['attack_cat'])
+    input_df['state'] = label_encoder.fit_transform(input_df['state'])
+    input_df['attack_cat'] = label_encoder.fit_transform(input_df['attack_cat'])
 
 
     # Add missing columns with default values if they do not exist
