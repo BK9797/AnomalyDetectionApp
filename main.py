@@ -94,11 +94,11 @@ def main():
         # input_scaled = scaler.transform(input_df)
         
         # Make a prediction
-        prediction = model.predict(input_data)
-        prediction_label = 'Attack' if prediction == 1 else 'Normal'
+    prediction = model.predict(input_data)
+    prediction_label = 'Attack' if prediction == 1 else 'Normal'
         
         # Display the result
-        st.subheader(f'Prediction: {prediction_label}')
+    st.subheader(f'Prediction: {prediction_label}')
 
 if __name__ == "__main__":
     main()
