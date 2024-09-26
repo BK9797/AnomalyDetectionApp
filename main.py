@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from xgboost import XGBClassifier
 
 
@@ -22,15 +21,6 @@ def preprocess_data(df):
     label_encoder = LabelEncoder()
     df['state'] = label_encoder.fit_transform(df['state'])
     df['attack_cat'] = label_encoder.fit_transform(df['attack_cat'])
-    df['load_interaction'] = df['sload'] * df['dload']
-    df['total_bytes'] = df['sbytes'] + df['dbytes']
-    df['pkt_flow_ratio'] = df['spkts'] / (df['dpkts'] + 1)
-    df['bytes_diff'] = df['sbytes'] - df['dbytes']
-    df['bytes_ratio'] = df['sbytes'] / (df['dbytes'] + 1)
-    df['ttl_diff'] = df['sttl'] - df['dttl']
-    df['jitter_diff'] = df['sjit'] - df['djit']
-    df['jitter_ratio'] = df['sjit'] / (df['djit'] + 1)
-    df['tcp_time_diff'] = df['synack'] - df['ackdat']
     return df.drop('label', axis=1), df['label']
 
 def train_model(X, y):
@@ -47,19 +37,23 @@ def load_model_and_scaler():
     X, y = preprocess_data(data)
     return train_model(X, y)
 
-def prepare_input_data(input_data, columns):
-    df = pd.DataFrame([input_data])
-    df = pd.get_dummies(df, columns=['proto', 'state', 'service'], drop_first=True)
+def prepare_input_data(input_data, model_columns):
+    input_df = pd.DataFrame([input_data])
+    input_df = pd.get_dummies(input_df, columns=['proto', 'state', 'service'], drop_first=True)
     
-    for col in columns:
-        if col not in df.columns:
-            df[col] = 0  # Fill missing columns with 0
+    # Ensure all model columns are present in the input
+    for col in model_columns:
+        if col not in input_df.columns:
+            input_df[col] = 0  # Add missing columns with default value 0
 
-    return df[columns]
+    # Reorder columns to match model's expected input format
+    input_df = input_df[model_columns]
+    
+    return input_df
 
 def main():
     st.title('Network Traffic Anomaly Detection')
-    
+
     # Load the trained model and scaler
     model, scaler = load_model_and_scaler()
 
