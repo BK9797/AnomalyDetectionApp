@@ -59,8 +59,6 @@ def main():
 
     # Define input fields for user
     input_data = {
-        'sport': st.number_input('Source Port Number', min_value=0),
-        'dsport': st.number_input('Destination Port Number', min_value=0),
         'proto': st.selectbox('Protocol', ['TCP', 'UDP', 'ICMP', 'other']),
         'state': st.selectbox('State', ['FIN', 'CON', 'REQ', 'RSTO', 'other']),
         'dur': st.number_input('Duration', min_value=0.0),
@@ -82,7 +80,7 @@ def main():
     }
 
     # Define the columns your model expects
-    model_columns = ['sport', 'dsport', 'proto', 'state', 'dur', 'spkts', 'dpkts', 
+    model_columns = ['proto', 'state', 'dur', 'spkts', 'dpkts', 
                      'sbytes', 'dbytes', 'sttl', 'dttl', 'sload', 'dload', 
                      'sloss', 'dloss', 'service', 'sjit', 'djit', 'synack', 'ackdat']
 
