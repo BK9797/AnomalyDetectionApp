@@ -102,38 +102,23 @@ def main():
     input_data['synack'] = st.number_input('SYN-ACK', min_value=0.0)
     input_data['ackdat'] = st.number_input('ACK-DATA', min_value=0.0)
 
-    # Define the columns that your model expects
-    model_columns = [
-        'dur', 'proto_TCP', 'proto_UDP', 'proto_ICMP', 'proto_other', 
-        'service_http', 'service_dns', 'service_smtp', 'service_ftp', 
-        'state', 'spkts', 'dpkts', 'sbytes', 'dbytes', 
-        'sttl', 'dttl', 'sload', 'dload', 'sloss', 'dloss', 
-        'sjit', 'djit', 'synack', 'ackdat', 'load_interaction', 
-        'total_bytes', 'pkt_flow_ratio', 'bytes_diff', 'bytes_ratio', 
-        'ttl_diff', 'jitter_diff', 'jitter_ratio', 'tcp_time_diff'
-    ]
-
-    # When the user clicks the Predict button
+    # Button for prediction
     if st.button('Predict'):
-        st.write("Processing the following input data:")
-        st.write(input_data)
+        model_columns = X.columns.tolist()  # Get the feature names used in training
+        prediction_input = prepare_input_data(input_data, model_columns)
+        
+        # Scale the input data
+        prediction_input_scaled = scaler.transform(prediction_input)
 
-        # Prepare the input data as a DataFrame
-        input_df = prepare_input_data(input_data, model_columns)
+        # Make a prediction using the model
+        prediction = model.predict(prediction_input_scaled)
+        probability = model.predict_proba(prediction_input_scaled)[0][1]
 
-        # Check if the input features match the model's expected features
-        if set(input_df.columns) != set(model_columns):
-            st.error("Input features do not match the model's expected features.")
-        else:
-            # Scale the input data
-            input_scaled = scaler.transform(input_df)
-
-            # Make a prediction using the model
-            prediction = model.predict(input_scaled)
-            prediction_label = 'Attack' if prediction[0] == 1 else 'Normal'
-
-            # Display the result
-            st.subheader(f'Prediction: {prediction_label}')
+        # Display the result
+        st.subheader('Prediction Result')
+        prediction_label = 'Attack' if prediction[0] == 1 else 'Normal'
+        st.success(f'The Prediction: {prediction_label}')
+        st.success(f'The Probability of Attack: {probability:.2%}')
 
 if __name__ == "__main__":
     main()
