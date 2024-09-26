@@ -1,13 +1,10 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import seaborn as sns
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from xgboost import XGBClassifier
-from sklearn.metrics import accuracy_score
 
 
 @st.cache_data
@@ -17,8 +14,8 @@ def load_data():
 def preprocess_data(df):
     df.dropna(inplace=True)
     df.drop(['id'], axis=1, inplace=True)
-    df['state'] = df['state'].replace('-','other')
-    df['service'] = df['service'].replace('-','other')
+    df['state'] = df['state'].replace('-', 'other')
+    df['service'] = df['service'].replace('-', 'other')
     features_to_drop = ['ct_state_ttl', 'ct_dst_sport_ltm', 'ct_src_ltm']
     df = df.drop(features_to_drop, axis=1)
     df = pd.get_dummies(df, columns=['proto', 'service'], drop_first=True)
@@ -45,56 +42,63 @@ def train_model(X, y):
     model.fit(X_train_scaled, y_train)
     return model, scaler
 
-def main():
-    st.title('Network Traffic Anomaly Detection')
+def load_model_and_scaler():
     data = load_data()
     X, y = preprocess_data(data)
-    model, scaler = train_model(X, y)
+    return train_model(X, y)
 
-    # Define input fields based on the dataset
-    input_data = {}
+def prepare_input_data(input_data, columns):
+    df = pd.DataFrame([input_data])
+    df = pd.get_dummies(df, columns=['proto', 'state', 'service'], drop_first=True)
+    
+    for col in columns:
+        if col not in df.columns:
+            df[col] = 0  # Fill missing columns with 0
 
-    # Add input fields
-    input_data['srcip'] = st.text_input('Source IP Address')
-    input_data['sport'] = st.number_input('Source Port Number', min_value=0)
-    input_data['dstip'] = st.text_input('Destination IP Address')
-    input_data['dsport'] = st.number_input('Destination Port Number', min_value=0)
-    input_data['proto'] = st.selectbox('Protocol', ['TCP', 'UDP', 'ICMP', 'other'])
-    input_data['state'] = st.selectbox('State', ['FIN', 'CON', 'REQ', 'RSTO', 'other'])
-    input_data['dur'] = st.number_input('Duration', min_value=0.0)
-    input_data['spkts'] = st.number_input('Source Packets', min_value=0)
-    input_data['dpkts'] = st.number_input('Destination Packets', min_value=0)
-    input_data['sbytes'] = st.number_input('Source Bytes', min_value=0)
-    input_data['dbytes'] = st.number_input('Destination Bytes', min_value=0)
-    input_data['sttl'] = st.number_input('Source Time to Live (TTL)', min_value=0)
-    input_data['dttl'] = st.number_input('Destination Time to Live (TTL)', min_value=0)
-    input_data['sload'] = st.number_input('Source Load', min_value=0.0)
-    input_data['dload'] = st.number_input('Destination Load', min_value=0.0)
-    input_data['sloss'] = st.number_input('Source Loss', min_value=0)
-    input_data['dloss'] = st.number_input('Destination Loss', min_value=0)
-    input_data['service'] = st.selectbox('Service', ['http', 'dns', 'smtp', 'ftp', 'other'])
-    input_data['sjit'] = st.number_input('Source Jitter', min_value=0.0)
-    input_data['djit'] = st.number_input('Destination Jitter', min_value=0.0)
-    input_data['synack'] = st.number_input('SYN-ACK', min_value=0.0)
-    input_data['ackdat'] = st.number_input('ACK-DATA', min_value=0.0)
+    return df[columns]
 
+def main():
+    st.title('Network Traffic Anomaly Detection')
+    
     # Load the trained model and scaler
     model, scaler = load_model_and_scaler()
 
-    # Define the columns that your model expects
-    model_columns = ['sport', 'dsport', 'proto', 'state', 'dur', 'spkts', 'dpkts',
-                     'sbytes', 'dbytes', 'sttl', 'dttl', 'sload', 'dload', 'sloss',
-                     'dloss', 'service', 'sjit', 'djit', 'synack', 'ackdat']
+    # Define input fields for user
+    input_data = {
+        'sport': st.number_input('Source Port Number', min_value=0),
+        'dsport': st.number_input('Destination Port Number', min_value=0),
+        'proto': st.selectbox('Protocol', ['TCP', 'UDP', 'ICMP', 'other']),
+        'state': st.selectbox('State', ['FIN', 'CON', 'REQ', 'RSTO', 'other']),
+        'dur': st.number_input('Duration', min_value=0.0),
+        'spkts': st.number_input('Source Packets', min_value=0),
+        'dpkts': st.number_input('Destination Packets', min_value=0),
+        'sbytes': st.number_input('Source Bytes', min_value=0),
+        'dbytes': st.number_input('Destination Bytes', min_value=0),
+        'sttl': st.number_input('Source TTL', min_value=0),
+        'dttl': st.number_input('Destination TTL', min_value=0),
+        'sload': st.number_input('Source Load', min_value=0.0),
+        'dload': st.number_input('Destination Load', min_value=0.0),
+        'sloss': st.number_input('Source Loss', min_value=0),
+        'dloss': st.number_input('Destination Loss', min_value=0),
+        'service': st.selectbox('Service', ['http', 'dns', 'smtp', 'ftp', 'other']),
+        'sjit': st.number_input('Source Jitter', min_value=0.0),
+        'djit': st.number_input('Destination Jitter', min_value=0.0),
+        'synack': st.number_input('SYN-ACK', min_value=0.0),
+        'ackdat': st.number_input('ACK-DATA', min_value=0.0)
+    }
 
-    # When the user clicks the Predict button
+    # Define the columns your model expects
+    model_columns = ['sport', 'dsport', 'proto', 'state', 'dur', 'spkts', 'dpkts', 
+                     'sbytes', 'dbytes', 'sttl', 'dttl', 'sload', 'dload', 
+                     'sloss', 'dloss', 'service', 'sjit', 'djit', 'synack', 'ackdat']
+
+    # Prediction button
     if st.button('Predict'):
         st.write("Processing the following input data:")
         st.write(input_data)
-        
-        # Prepare the input data
+
+        # Prepare and scale the input data
         input_df = prepare_input_data(input_data, model_columns)
-        
-        # Scale the input data
         input_scaled = scaler.transform(input_df)
         
         # Make a prediction
