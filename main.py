@@ -45,52 +45,64 @@ def train_model(X, y):
     model.fit(X_train_scaled, y_train)
     return model, scaler
 
-def main():
-    st.title('Anomaly Detection Predictor')
+    def main():
+    st.title('Network Traffic Anomaly Detection')
     data = load_data()
     X, y = preprocess_data(data)
     model, scaler = train_model(X, y)
 
-    st.header('Enter Your Information')
+    # Define input fields based on the dataset
     input_data = {}
-    input_data['company_name'] = st.text_input('Company Name')
-    input_data['foundation_date'] = st.date_input('Foundation Date')
-    input_data['age_first_funding_year'] = st.number_input('Age at First Funding (years)', min_value=0.0)
-    input_data['age_last_funding_year'] = st.number_input('Age at Last Funding (years)', min_value=0.0)
-    input_data['relationships'] = st.number_input('Number of Relationships', min_value=0)
-    input_data['funding_rounds'] = st.number_input('Number of Funding Rounds', min_value=0)
-    input_data['funding_total_usd'] = st.number_input('Total Funding (USD)', min_value=0)
-    input_data['milestones'] = st.number_input('Number of Milestones', min_value=0)
-    input_data['has_VC'] = st.checkbox('Has Venture Capital Funding')
-    input_data['has_angel'] = st.checkbox('Has Angel Funding')
-    input_data['has_roundA'] = st.checkbox('Has Round A Funding')
-    input_data['has_roundB'] = st.checkbox('Has Round B Funding')
-    input_data['has_roundC'] = st.checkbox('Has Round C Funding')
-    input_data['has_roundD'] = st.checkbox('Has Round D Funding')
-    input_data['avg_participants'] = st.number_input('Average Number of Funding Participants', min_value=0.0)
-    input_data['is_top500'] = st.checkbox('Is in Top 500')
 
-    if st.button('Predict Success'):
-        prediction_input = prepare_input_data(input_data, X.columns)
-        prediction_input_scaled = scaler.transform(prediction_input)
-        probability = model.predict_proba(prediction_input_scaled)[0][1]
-        st.subheader('Prediction Result')
-        st.success(f'The Probability of success: {probability:.2%}')
+    # Add input fields
+    input_data['srcip'] = st.text_input('Source IP Address')
+    input_data['sport'] = st.number_input('Source Port Number', min_value=0)
+    input_data['dstip'] = st.text_input('Destination IP Address')
+    input_data['dsport'] = st.number_input('Destination Port Number', min_value=0)
+    input_data['proto'] = st.selectbox('Protocol', ['TCP', 'UDP', 'ICMP', 'other'])
+    input_data['state'] = st.selectbox('State', ['FIN', 'CON', 'REQ', 'RSTO', 'other'])
+    input_data['dur'] = st.number_input('Duration', min_value=0.0)
+    input_data['spkts'] = st.number_input('Source Packets', min_value=0)
+    input_data['dpkts'] = st.number_input('Destination Packets', min_value=0)
+    input_data['sbytes'] = st.number_input('Source Bytes', min_value=0)
+    input_data['dbytes'] = st.number_input('Destination Bytes', min_value=0)
+    input_data['sttl'] = st.number_input('Source Time to Live (TTL)', min_value=0)
+    input_data['dttl'] = st.number_input('Destination Time to Live (TTL)', min_value=0)
+    input_data['sload'] = st.number_input('Source Load', min_value=0.0)
+    input_data['dload'] = st.number_input('Destination Load', min_value=0.0)
+    input_data['sloss'] = st.number_input('Source Loss', min_value=0)
+    input_data['dloss'] = st.number_input('Destination Loss', min_value=0)
+    input_data['service'] = st.selectbox('Service', ['http', 'dns', 'smtp', 'ftp', 'other'])
+    input_data['sjit'] = st.number_input('Source Jitter', min_value=0.0)
+    input_data['djit'] = st.number_input('Destination Jitter', min_value=0.0)
+    input_data['synack'] = st.number_input('SYN-ACK', min_value=0.0)
+    input_data['ackdat'] = st.number_input('ACK-DATA', min_value=0.0)
 
-def prepare_input_data(input_data, columns):
-    df = pd.DataFrame(input_data, index=[0])
-    df['has_RoundABCD'] = ((df[['has_roundA', 'has_roundB', 'has_roundC', 'has_roundD']] == 1).any(axis=1)).astype(int)
-    df['has_Investor'] = ((df[['has_VC', 'has_angel']] == 1).any(axis=1)).astype(int)
-    df['has_Seed'] = ((df['has_RoundABCD'] == 0) & (df['has_Investor'] == 1)).astype(int)
-    df['invalid_startup'] = ((df['has_RoundABCD'] == 0) & (df['has_VC'] == 0) & (df['has_angel'] == 0)).astype(int)
-    
-    df = pd.get_dummies(df, columns=['state', 'category', 'city'], prefix=['State', 'category', 'City'])
-    
-    for col in columns:
-        if col not in df.columns:
-            df[col] = 0
-    
-    return df[columns]
+    # Load the trained model and scaler
+    model, scaler = load_model_and_scaler()
+
+    # Define the columns that your model expects
+    model_columns = ['sport', 'dsport', 'proto', 'state', 'dur', 'spkts', 'dpkts',
+                     'sbytes', 'dbytes', 'sttl', 'dttl', 'sload', 'dload', 'sloss',
+                     'dloss', 'service', 'sjit', 'djit', 'synack', 'ackdat']
+
+    # When the user clicks the Predict button
+    if st.button('Predict'):
+        st.write("Processing the following input data:")
+        st.write(input_data)
+        
+        # Prepare the input data
+        input_df = prepare_input_data(input_data, model_columns)
+        
+        # Scale the input data
+        input_scaled = scaler.transform(input_df)
+        
+        # Make a prediction
+        prediction = model.predict(input_scaled)
+        prediction_label = 'Attack' if prediction == 1 else 'Normal'
+        
+        # Display the result
+        st.subheader(f'Prediction: {prediction_label}')
 
 if __name__ == "__main__":
     main()
