@@ -93,7 +93,7 @@ def main():
     input_data['dur'] = st.number_input('Duration', min_value=0.0)
     input_data['proto'] = st.selectbox('Protocol', ['TCP', 'UDP', 'ICMP', 'other'])
     input_data['service'] = st.selectbox('Service', ['http', 'dns', 'smtp', 'ftp', 'other'])
-    input_data['state'] = st.selectbox('State', ['FIN', 'CON', 'REQ', 'RSTO', 'other'])
+    input_data['state'] = st.selectbox('State', ['INT', 'FIN', 'CON', 'REQ', 'RSTO', 'other'])
     input_data['spkts'] = st.number_input('Source Packets', min_value=0)
     input_data['dpkts'] = st.number_input('Destination Packets', min_value=0)
     input_data['sbytes'] = st.number_input('Source Bytes', min_value=0)
