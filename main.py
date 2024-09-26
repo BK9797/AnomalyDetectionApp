@@ -50,9 +50,6 @@ def prepare_input_data(input_data, model_columns):
     # Convert the input_data dictionary into a DataFrame
     input_df = pd.DataFrame([input_data])
 
-    # One-hot encode 'proto' and 'service' similar to how it was done in preprocessing
-    input_df = pd.get_dummies(input_df, columns=['proto', 'service'], drop_first=True)
-
     # Add missing columns with default values if they do not exist
     for col in model_columns:
         if col not in input_df.columns:
@@ -99,9 +96,9 @@ def main():
     input_data['ackdat'] = st.number_input('ACK-DATA', min_value=0.0)
 
     # Define the columns that your model expects
-    model_columns = ['sport', 'dsport', 'proto', 'state', 'dur', 'spkts', 'dpkts',
+    model_columns = ['dur', 'proto', 'service', 'state', 'spkts', 'dpkts',
                      'sbytes', 'dbytes', 'sttl', 'dttl', 'sload', 'dload', 'sloss',
-                     'dloss', 'service', 'sjit', 'djit', 'synack', 'ackdat']
+                     'dloss', 'sjit', 'djit', 'synack', 'ackdat']
 
     # When the user clicks the Predict button
     if st.button('Predict'):
