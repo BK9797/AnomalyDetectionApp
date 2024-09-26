@@ -53,14 +53,18 @@ def prepare_input_data(input_data, model_columns):
     # One-hot encode 'proto' and 'service' similar to how it was done in preprocessing
     input_df = pd.get_dummies(input_df, columns=['proto', 'service'], drop_first=True)
 
-    # If any columns are missing after one-hot encoding, add them with default values
+    # Add missing columns with default values if they do not exist
     for col in model_columns:
         if col not in input_df.columns:
             input_df[col] = 0
 
     # Ensure the input columns are in the same order as the model was trained on
     input_df = input_df[model_columns]
-    
+
+    # Debugging information
+    st.write("Input DataFrame columns:", input_df.columns.tolist())
+    st.write("Model expected columns:", model_columns)
+
     return input_df
 
 def main():
@@ -75,9 +79,10 @@ def main():
     input_data = {}
 
     # Add input fields for user data
-    input_data['proto'] = st.selectbox('Protocol', ['TCP', 'UDP', 'ICMP', 'other'])
-    input_data['state'] = st.selectbox('State', ['FIN', 'CON', 'REQ', 'RSTO', 'other'])
     input_data['dur'] = st.number_input('Duration', min_value=0.0)
+    input_data['proto'] = st.selectbox('Protocol', ['TCP', 'UDP', 'ICMP', 'other'])
+    input_data['service'] = st.selectbox('Service', ['http', 'dns', 'smtp', 'ftp', 'other'])
+    input_data['state'] = st.selectbox('State', ['FIN', 'CON', 'REQ', 'RSTO', 'other'])
     input_data['spkts'] = st.number_input('Source Packets', min_value=0)
     input_data['dpkts'] = st.number_input('Destination Packets', min_value=0)
     input_data['sbytes'] = st.number_input('Source Bytes', min_value=0)
@@ -88,7 +93,6 @@ def main():
     input_data['dload'] = st.number_input('Destination Load', min_value=0.0)
     input_data['sloss'] = st.number_input('Source Loss', min_value=0)
     input_data['dloss'] = st.number_input('Destination Loss', min_value=0)
-    input_data['service'] = st.selectbox('Service', ['http', 'dns', 'smtp', 'ftp', 'other'])
     input_data['sjit'] = st.number_input('Source Jitter', min_value=0.0)
     input_data['djit'] = st.number_input('Destination Jitter', min_value=0.0)
     input_data['synack'] = st.number_input('SYN-ACK', min_value=0.0)
